@@ -13,7 +13,234 @@ from src.data_loader import load_workouts, get_exercises, load_measurements, sav
 from src.analysis import compute_volume, compute_1rm, detect_stagnation, compute_frequency_heatmap, get_pr_markers
 from src.ai_coach import PROVIDER_DEFAULTS, ask_coach
 
+# ── Palette ───────────────────────────────────────────────────────────────────
+_BG        = "#0F1117"
+_SURFACE   = "#1A1E2E"
+_BORDER    = "#2D3250"
+_ACCENT    = "#7C3AED"
+_TEXT      = "#E2E8F0"
+_MUTED     = "#94A3B8"
+_CHART_COLORS = ["#7C3AED", "#06B6D4", "#10B981", "#F59E0B", "#EC4899",
+                 "#3B82F6", "#F97316", "#A855F7", "#14B8A6", "#EF4444"]
+
+# ── Custom CSS ────────────────────────────────────────────────────────────────
+_CUSTOM_CSS = f"""
+/* ── Hide Streamlit chrome ── */
+#MainMenu, footer, header {{ visibility: hidden; }}
+
+/* ── Page container ── */
+.main .block-container {{
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}}
+
+/* ── Metric cards ── */
+[data-testid="metric-container"] {{
+    background: {_SURFACE};
+    border: 1px solid {_BORDER};
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+}}
+[data-testid="metric-container"] > div {{
+    gap: 0.25rem;
+}}
+[data-testid="stMetricLabel"] {{
+    color: {_MUTED} !important;
+    font-size: 0.78rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}}
+[data-testid="stMetricValue"] {{
+    color: {_TEXT} !important;
+    font-size: 1.6rem !important;
+    font-weight: 600;
+}}
+[data-testid="stMetricDelta"] {{
+    font-size: 0.82rem !important;
+}}
+
+/* ── Tabs ── */
+.stTabs [data-baseweb="tab-list"] {{
+    gap: 0.25rem;
+    background: transparent;
+    border-bottom: 1px solid {_BORDER};
+    padding-bottom: 0;
+}}
+.stTabs [data-baseweb="tab"] {{
+    border-radius: 8px 8px 0 0;
+    padding: 0.5rem 1.1rem;
+    color: {_MUTED};
+    background: transparent;
+    border: none;
+    font-size: 0.875rem;
+}}
+.stTabs [data-baseweb="tab"]:hover {{
+    color: {_TEXT};
+    background: {_SURFACE};
+}}
+.stTabs [aria-selected="true"] {{
+    color: {_TEXT} !important;
+    background: {_SURFACE} !important;
+    border-bottom: 2px solid {_ACCENT} !important;
+}}
+.stTabs [data-baseweb="tab-highlight"] {{
+    display: none;
+}}
+
+/* ── Sidebar ── */
+[data-testid="stSidebar"] {{
+    background: #0D1018 !important;
+    border-right: 1px solid {_BORDER};
+}}
+[data-testid="stSidebar"] .stMarkdown h2,
+[data-testid="stSidebar"] .stMarkdown h3 {{
+    color: {_MUTED};
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+}}
+
+/* ── Buttons ── */
+.stButton > button {{
+    border-radius: 8px;
+    border: 1px solid {_BORDER};
+    background: {_SURFACE};
+    color: {_TEXT};
+    font-size: 0.875rem;
+    transition: border-color 0.15s, color 0.15s;
+}}
+.stButton > button:hover {{
+    border-color: {_ACCENT};
+    color: {_ACCENT};
+    background: {_SURFACE};
+}}
+.stButton > button[kind="primary"] {{
+    background: {_ACCENT};
+    border-color: {_ACCENT};
+    color: #fff;
+}}
+.stButton > button[kind="primary"]:hover {{
+    background: #6D28D9;
+    border-color: #6D28D9;
+    color: #fff;
+}}
+
+/* ── Form submit button ── */
+.stFormSubmitButton > button {{
+    border-radius: 8px;
+    background: {_ACCENT};
+    border-color: {_ACCENT};
+    color: #fff;
+}}
+.stFormSubmitButton > button:hover {{
+    background: #6D28D9;
+    border-color: #6D28D9;
+}}
+
+/* ── Inputs, selects, number inputs ── */
+.stTextInput > div > div > input,
+.stTextArea > div > div > textarea,
+.stNumberInput > div > div > input {{
+    background: {_SURFACE} !important;
+    border: 1px solid {_BORDER} !important;
+    border-radius: 8px !important;
+    color: {_TEXT} !important;
+}}
+.stTextInput > div > div > input:focus,
+.stTextArea > div > div > textarea:focus,
+.stNumberInput > div > div > input:focus {{
+    border-color: {_ACCENT} !important;
+    box-shadow: 0 0 0 2px rgba(124,58,237,0.2) !important;
+}}
+
+/* ── Selectbox ── */
+.stSelectbox [data-baseweb="select"] > div {{
+    background: {_SURFACE} !important;
+    border: 1px solid {_BORDER} !important;
+    border-radius: 8px !important;
+}}
+
+/* ── Multiselect ── */
+.stMultiSelect [data-baseweb="select"] > div {{
+    background: {_SURFACE} !important;
+    border: 1px solid {_BORDER} !important;
+    border-radius: 8px !important;
+}}
+.stMultiSelect [data-baseweb="tag"] {{
+    background: rgba(124,58,237,0.25) !important;
+    border-radius: 6px !important;
+}}
+
+/* ── Slider ── */
+[data-testid="stSlider"] > div > div > div > div {{
+    background: {_ACCENT} !important;
+}}
+
+/* ── Dataframe ── */
+[data-testid="stDataFrame"] {{
+    border: 1px solid {_BORDER};
+    border-radius: 10px;
+    overflow: hidden;
+}}
+
+/* ── Expander ── */
+.streamlit-expanderHeader {{
+    background: {_SURFACE} !important;
+    border-radius: 8px !important;
+    border: 1px solid {_BORDER} !important;
+    color: {_TEXT} !important;
+}}
+
+/* ── Divider ── */
+hr {{
+    border-color: {_BORDER} !important;
+}}
+
+/* ── Section subheaders ── */
+h2, h3 {{
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}}
+"""
+
+# ── Chart style helper ─────────────────────────────────────────────────────
+def _style_fig(fig: go.Figure) -> go.Figure:
+    """Apply consistent dark theme to any Plotly figure."""
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color=_TEXT, family="Inter, system-ui, sans-serif", size=13),
+        colorway=_CHART_COLORS,
+        xaxis=dict(
+            gridcolor=_BORDER,
+            linecolor=_BORDER,
+            zerolinecolor=_BORDER,
+            tickfont=dict(color=_MUTED),
+        ),
+        yaxis=dict(
+            gridcolor=_BORDER,
+            linecolor=_BORDER,
+            zerolinecolor=_BORDER,
+            tickfont=dict(color=_MUTED),
+        ),
+        legend=dict(
+            bgcolor="rgba(0,0,0,0)",
+            bordercolor=_BORDER,
+            borderwidth=1,
+        ),
+        margin=dict(t=50, b=40, l=10, r=10),
+    )
+    # For figures with multiple axes (e.g. density heatmap)
+    for axis in ("xaxis2", "yaxis2"):
+        if hasattr(fig.layout, axis):
+            fig.update_layout(**{axis: dict(gridcolor=_BORDER, linecolor=_BORDER,
+                                            tickfont=dict(color=_MUTED))})
+    return fig
+
+
 st.set_page_config(page_title="Workout OS", page_icon="💪", layout="wide")
+st.markdown(f"<style>{_CUSTOM_CSS}</style>", unsafe_allow_html=True)
 
 st.title("💪 Workout OS")
 
@@ -82,7 +309,7 @@ with tab_volume:
             )
             fig.update_traces(marker_size=8)
             fig.update_layout(hovermode="x unified", legend_title_text="Exercise")
-            st.plotly_chart(fig)
+            st.plotly_chart(_style_fig(fig))
     else:
         st.info("Select at least one exercise above.")
 
@@ -137,7 +364,7 @@ with tab_1rm:
                 ))
 
             fig.update_layout(hovermode="x unified", legend_title_text="Exercise")
-            st.plotly_chart(fig)
+            st.plotly_chart(_style_fig(fig))
 
             # PR summary table
             with st.expander("Personal Records"):
@@ -184,7 +411,6 @@ with tab_freq:
     if freq_df.empty:
         st.info("No session data to display.")
     else:
-        # Calendar heatmap using a scatter with day/week axes
         freq_df["date_str"] = freq_df["session_date"].dt.strftime("%b %d, %Y")
         freq_df["day_name"] = freq_df["session_date"].dt.strftime("%a")
 
@@ -192,22 +418,23 @@ with tab_freq:
             freq_df,
             x="week", y="weekday",
             z="count",
-            color_continuous_scale="Greens",
+            color_continuous_scale=[[0, _SURFACE], [1, _ACCENT]],
             labels={"week": "Week of Year", "weekday": "Day (0=Mon)", "count": "Sessions"},
             title=f"Workout frequency — last {days} days",
         )
         fig.update_layout(yaxis=dict(
-            tickvals=[0,1,2,3,4,5,6],
-            ticktext=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+            tickvals=[0, 1, 2, 3, 4, 5, 6],
+            ticktext=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         ))
-        st.plotly_chart(fig)
+        st.plotly_chart(_style_fig(fig))
 
         total_sessions = len(df.drop_duplicates(subset=["title", "session_date"]))
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total Sessions", total_sessions)
-        col2.metric("Avg / Week", f"{total_sessions / max(days/7, 1):.1f}")
-        most_common_day = freq_df.groupby("day_name")["count"].sum().idxmax() if not freq_df.empty else "—"
-        col3.metric("Most Active Day", most_common_day)
+        with st.container(border=True):
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Total Sessions", total_sessions)
+            col2.metric("Avg / Week", f"{total_sessions / max(days/7, 1):.1f}")
+            most_common_day = freq_df.groupby("day_name")["count"].sum().idxmax() if not freq_df.empty else "—"
+            col3.metric("Most Active Day", most_common_day)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TAB 5: MEASUREMENTS
@@ -244,23 +471,25 @@ with tab_measurements:
             fig_w = px.line(m_df, x="date", y=["weight_kg", "weight_7d_avg"],
                             markers=True, title="Body Weight Over Time",
                             labels={"value": "Weight (kg)", "variable": ""},
-                            color_discrete_map={"weight_kg": "#636EFA", "weight_7d_avg": "#EF553B"})
-            st.plotly_chart(fig_w)
+                            color_discrete_map={"weight_kg": _CHART_COLORS[0], "weight_7d_avg": _CHART_COLORS[1]})
+            st.plotly_chart(_style_fig(fig_w))
 
         with col_bmi:
             fig_bmi = px.line(m_df, x="date", y="bmi",
                               markers=True, title="BMI Over Time",
-                              labels={"bmi": "BMI"})
-            st.plotly_chart(fig_bmi)
+                              labels={"bmi": "BMI"},
+                              color_discrete_sequence=[_CHART_COLORS[2]])
+            st.plotly_chart(_style_fig(fig_bmi))
 
         if len(m_df) >= 1:
             current_w = m_df["weight_kg"].iloc[-1]
             start_w = m_df["weight_kg"].iloc[0]
             delta = current_w - start_w
-            cols = st.columns(3)
-            cols[0].metric("Current Weight", f"{current_w:.1f} kg")
-            cols[1].metric("Starting Weight", f"{start_w:.1f} kg")
-            cols[2].metric("Total Change", f"{delta:+.1f} kg")
+            with st.container(border=True):
+                cols = st.columns(3)
+                cols[0].metric("Current Weight", f"{current_w:.1f} kg")
+                cols[1].metric("Starting Weight", f"{start_w:.1f} kg")
+                cols[2].metric("Total Change", f"{delta:+.1f} kg")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TAB 6: AI COACH
