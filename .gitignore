@@ -29,3 +29,7 @@ env/
 .idea/
 *.swp
 *.swo
+
+# Personal data — never commit workout/measurement exports
+data/*.csv
+workouts.csv
